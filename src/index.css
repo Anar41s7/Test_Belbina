@@ -41,6 +41,11 @@ body {
     max-width: calc(100% - 20px);
     padding: 24px;
   }
+
+  .nav-btn {
+    padding: 14px 28px !important;
+    font-size: 16px !important;
+  }
 }
 
 .progress-container {
@@ -583,11 +588,6 @@ body {
     font-size: 14px;
   }
 
-  .nav-btn {
-    padding: 10px 24px;
-    font-size: 14px;
-  }
-
   .results-title {
     font-size: 26px;
   }
@@ -659,11 +659,6 @@ body {
     padding: 6px 8px;
   }
 
-  .nav-btn {
-    padding: 8px 20px;
-    font-size: 14px;
-  }
-
   .sum-indicator {
     font-size: 12px;
     padding: 8px;
@@ -701,12 +696,6 @@ body {
   .action-buttons {
     flex-direction: column;
     align-items: center;
-  }
-
-  .action-btn {
-    min-width: 160px;
-    padding: 10px 16px;
-    font-size: 14px;
   }
 
   .details-button {
@@ -773,6 +762,11 @@ body {
     padding: 20px;
   }
 
+  .nav-btn {
+    padding: 14px 28px !important;
+    font-size: 16px !important;
+  }
+
   .section-title {
     font-size: 20px;
   }
@@ -802,11 +796,6 @@ body {
     max-width: 60px;
     font-size: 13px;
     padding: 5px 6px;
-  }
-
-  .nav-btn {
-    padding: 6px 16px;
-    font-size: 13px;
   }
 
   .navigation {
@@ -867,14 +856,6 @@ body {
     margin-top: 20px;
     flex-direction: column;
     align-items: center;
-  }
-
-  .action-btn {
-    min-width: 140px;
-    width: 100%;
-    max-width: 200px;
-    padding: 8px 16px;
-    font-size: 13px;
   }
 
   .details-button {
@@ -957,6 +938,11 @@ body {
     padding: 16px;
   }
 
+  .nav-btn {
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+  }
+
   .section-title {
     font-size: 18px;
   }
@@ -969,11 +955,6 @@ body {
     width: 55px;
     min-width: 55px;
     max-width: 55px;
-    font-size: 12px;
-  }
-
-  .nav-btn {
-    padding: 5px 12px;
     font-size: 12px;
   }
 
@@ -991,11 +972,6 @@ body {
 
   .top-role h3 {
     font-size: 16px;
-  }
-
-  .action-btn {
-    min-width: 120px;
-    font-size: 12px;
   }
 
   .name-title {
