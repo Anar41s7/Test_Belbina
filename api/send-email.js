@@ -1,25 +1,23 @@
-import { sendEmail } from 'vercel-email';
+import pkg from 'vercel-email';
+const { sendEmail } = pkg;
 
-export default async function handler(req) {
+export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-            status: 405,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        const { name, results, topRole, topDescription, date } = await req.json();
+        const { name, results, topRole, topDescription, date } = req.body;
 
         const emailHtml = `
       <!DOCTYPE html>
-      <html lang="ru">
+      <html>
       <head>
         <meta charset="UTF-8">
         <title>Результаты теста Белбина</title>
         <style>
           body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: #1f2937;
           }
@@ -123,17 +121,10 @@ export default async function handler(req) {
             html: emailHtml,
         });
 
-        return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
-
+        return res.status(200).json({ success: true });
     } catch (error) {
         console.error('Ошибка отправки:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return res.status(500).json({ error: error.message });
     }
 }
 
