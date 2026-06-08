@@ -51,7 +51,7 @@ function ResultsPage({ results, fullName }) {
             }
 
             const canvas = await html2canvas(pdfContentRef.current, {
-                scale: 4,
+                scale: 1,
                 backgroundColor: '#ffffff',
                 logging: false,
                 useCORS: true,
