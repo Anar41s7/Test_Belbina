@@ -7,6 +7,7 @@ function ResultsPage({ results, fullName }) {
     const { sortedRoles, topRole } = results;
     const [showDescription, setShowDescription] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isSending, setIsSending] = useState(false);
     const pdfContentRef = useRef();
 
     const toggleDescription = () => {
@@ -15,10 +16,6 @@ function ResultsPage({ results, fullName }) {
         setTimeout(() => {
             window.scrollTo(0, scrollY);
         }, 0);
-    };
-
-    const sendResultsToEmail = () => {
-        alert('Функция отправки на почту будет настроена позже');
     };
 
     const downloadPDF = async () => {
@@ -97,6 +94,46 @@ function ResultsPage({ results, fullName }) {
         }
     };
 
+    const formatResultsForEmail = () => {
+        let rolesText = '';
+        sortedRoles.forEach(({ role, score }) => {
+            rolesText += `${roleNames[role]}: ${score} баллов\n`;
+        });
+        return rolesText;
+    };
+
+    const sendResultsToEmail = async () => {
+        if (isSending) return;
+
+        setIsSending(true);
+
+        try {
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: fullName,
+                    results: formatResultsForEmail(),
+                    topRole: roleNames[topRole],
+                    topDescription: roleFullDescriptions[topRole],
+                    date: new Date().toLocaleString('ru-RU'),
+                }),
+            });
+
+            if (response.ok) {
+                alert('✅ Результаты успешно отправлены преподавателю!');
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка отправки');
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('❌ Произошла ошибка при отправке. Попробуйте ещё раз.');
+        } finally {
+            setIsSending(false);
+        }
+    };
+
     return (
         <div className="quiz-container results-container">
             <div ref={pdfContentRef}>
@@ -143,8 +180,8 @@ function ResultsPage({ results, fullName }) {
                 <button className="action-btn download-btn" onClick={downloadPDF} disabled={isGenerating}>
                     {isGenerating ? 'Создание PDF...' : 'Скачать результаты'}
                 </button>
-                <button className="action-btn email-btn" onClick={sendResultsToEmail}>
-                    Отправить результаты
+                <button className="action-btn email-btn" onClick={sendResultsToEmail} disabled={isSending}>
+                    {isSending ? 'Отправка...' : 'Отправить результаты'}
                 </button>
             </div>
         </div>
