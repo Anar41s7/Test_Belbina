@@ -1,130 +1,102 @@
-import pkg from 'vercel-email';
-const { sendEmail } = pkg;
-
 export default async function handler(req, res) {
+    // Разрешаем только POST
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
+        // 1. Получаем данные
         const { name, results, topRole, topDescription, date } = req.body;
 
+        console.log('=== ДИАГНОСТИКА ===');
+        console.log('Получены данные:', { name, date, topRole });
+
+        // 2. Проверяем импорт vercel-email
+        let vercelEmailModule;
+        let sendEmailFunc = null;
+
+        try {
+            vercelEmailModule = await import('vercel-email');
+            console.log('Тип модуля:', typeof vercelEmailModule);
+            console.log('Ключи модуля:', Object.keys(vercelEmailModule));
+            console.log('Модуль:', vercelEmailModule);
+
+            // Пробуем найти функцию sendEmail
+            if (typeof vercelEmailModule === 'function') {
+                sendEmailFunc = vercelEmailModule;
+            } else if (vercelEmailModule.sendEmail && typeof vercelEmailModule.sendEmail === 'function') {
+                sendEmailFunc = vercelEmailModule.sendEmail;
+            } else if (vercelEmailModule.default && typeof vercelEmailModule.default === 'function') {
+                sendEmailFunc = vercelEmailModule.default;
+            } else if (typeof vercelEmailModule === 'object') {
+                // Ищем любую функцию в объекте
+                for (const key of Object.keys(vercelEmailModule)) {
+                    if (typeof vercelEmailModule[key] === 'function') {
+                        sendEmailFunc = vercelEmailModule[key];
+                        console.log(`Найдена функция по ключу: ${key}`);
+                        break;
+                    }
+                }
+            }
+
+            console.log('sendEmail найден?', !!sendEmailFunc);
+            console.log('Тип sendEmail:', typeof sendEmailFunc);
+
+        } catch (importError) {
+            console.error('Ошибка импорта vercel-email:', importError.message);
+        }
+
+        // 3. Формируем письмо
         const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Результаты теста Белбина</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-          }
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #ffffff;
-            border-radius: 16px;
-          }
-          h2 {
-            color: #667eea;
-            margin-bottom: 16px;
-          }
-          h3 {
-            color: #374151;
-            margin-top: 24px;
-            margin-bottom: 12px;
-          }
-          .info {
-            background: #f3f4f6;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin: 16px 0;
-          }
-          .info p {
-            margin: 4px 0;
-          }
-          .label {
-            font-weight: 600;
-            color: #4b5563;
-          }
-          .roles {
-            background: #f9fafb;
-            padding: 12px 16px;
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-          }
-          .roles pre {
-            margin: 0;
-            font-family: monospace;
-            font-size: 14px;
-            color: #1f2937;
-            white-space: pre-wrap;
-          }
-          .top-role {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 16px;
-            border-radius: 12px;
-            color: white;
-            text-align: center;
-          }
-          .top-role strong {
-            font-size: 20px;
-            display: block;
-            margin: 8px 0;
-          }
-          .footer {
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 12px;
-            color: #6b7280;
-            text-align: center;
-          }
-        </style>
-      </head>
-      <body style="margin: 0; padding: 20px; background: #f5f7fa;">
-        <div class="container">
-          <h2>📊 Новые результаты теста Белбина</h2>
-          
-          <div class="info">
-            <p><span class="label">👤 ФИО:</span> ${escapeHtml(name)}</p>
-            <p><span class="label">📅 Дата прохождения:</span> ${escapeHtml(date)}</p>
-          </div>
-          
-          <h3>🎯 Результаты по ролям</h3>
-          <div class="roles">
-            <pre>${escapeHtml(results)}</pre>
-          </div>
-          
-          <h3>🏆 Ведущая роль</h3>
-          <div class="top-role">
-            <strong>${escapeHtml(topRole)}</strong>
-            <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">${escapeHtml(topDescription)}</p>
-          </div>
-          
-          <div class="footer">
-            Тест Белбина — диагностика командных ролей<br>
-            Письмо сгенерировано автоматически
-          </div>
-        </div>
-      </body>
-      </html>
+      <h2>Результаты теста Белбина</h2>
+      <p><strong>ФИО:</strong> ${escapeHtml(name)}</p>
+      <p><strong>Дата:</strong> ${escapeHtml(date)}</p>
+      <h3>Результаты по ролям:</h3>
+      <pre>${escapeHtml(results)}</pre>
+      <h3>Ведущая роль:</h3>
+      <p><strong>${escapeHtml(topRole)}</strong></p>
+      <p>${escapeHtml(topDescription)}</p>
     `;
 
-        await sendEmail({
-            to: 'dima-demidov-05@list.ru',
-            from: 'belbin-test@vercel.app',
-            subject: `📊 Результаты теста Белбина: ${escapeHtml(name)}`,
-            html: emailHtml,
+        // 4. Пробуем отправить письмо через mail.baby (всегда работает)
+        console.log('Пробуем отправить через mail.baby...');
+
+        const babyResponse = await fetch('https://mail.baby/api/v1/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                to: 'dima-demidov-05@list.ru',
+                from: 'belbin-test@vercel.app',
+                subject: `Тест: Результаты Белбина - ${name}`,
+                html: emailHtml,
+            }),
         });
 
-        return res.status(200).json({ success: true });
+        const babyResult = await babyResponse.text();
+        console.log('Mail.baby ответ:', babyResult);
+
+        if (!babyResponse.ok) {
+            throw new Error(`Mail.baby error: ${babyResponse.status}`);
+        }
+
+        // 5. Успех
+        return res.status(200).json({
+            success: true,
+            message: 'Письмо отправлено через mail.baby',
+            diagnostic: {
+                importSuccess: !!sendEmailFunc,
+                mailbabySuccess: true
+            }
+        });
+
     } catch (error) {
-        console.error('Ошибка отправки:', error);
-        return res.status(500).json({ error: error.message });
+        console.error('Ошибка:', error);
+        return res.status(500).json({
+            error: error.message,
+            stack: error.stack
+        });
     }
 }
 
